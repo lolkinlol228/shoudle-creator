@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления расписанием</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--surface);
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Content Section */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.813rem;
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            background: var(--surface);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg);
+        }
+
+        th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.813rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.875rem 1rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--bg);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 0.75rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.25rem;
+        }
+
+        .modal-close:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--text);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            animation: slideIn 0.3s;
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Conflict Alert */
+        .conflict-alert {
+            background: #fef2f2;
+            border-left: 4px solid var(--danger);
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin: 1rem 0;
+        }
+
+        .conflict-alert h4 {
+            color: var(--danger);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .conflict-alert ul {
+            margin-left: 1.25rem;
+            font-size: 0.813rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-light);
+        }
+
+        .empty-state svg {
+            width: 4rem;
+            height: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Pair Buttons */
+        .pair-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .pair-btn {
+            padding: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.813rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .pair-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .pair-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Filter Container */
+        .filter-container {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid var(--bg);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 0.8s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.625rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 0.25rem;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* Checkbox */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .tab {
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pair-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                🎓 Система управления расписанием
+            </div>
+            <nav class="tabs">
+                <button class="tab active" onclick="switchTab('dashboard')">Панель</button>
+                <button class="tab" onclick="switchTab('schedule')">Расписание</button>
+                <button class="tab" onclick="switchTab('teachers')">Преподаватели</button>
+                <button class="tab" onclick="switchTab('subjects')">Предметы</button>
+                <button class="tab" onclick="switchTab('groups')">Группы</button>
+                <button class="tab" onclick="switchTab('classrooms')">Аудитории</button>
+                <button class="tab" onclick="switchTab('class-types')">Типы</button>
+                <button class="tab" onclick="switchTab('templates')">Шаблоны</button>
+                <button class="tab" onclick="switchTab('reports')">Отчёты</button>
+                <button class="tab" onclick="switchTab('settings')">Настройки</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="section-header">
+                <h2 class="section-title">Панель управления</h2>
+            </div>
+            <div class="stats-grid" id="stats-container"></div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section id="schedule" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Расписание занятий</h2>
+                <button class="btn btn-primary" onclick="showScheduleModal()">
+                    ➕ Добавить занятие
+                </button>
+            </div>
+            <div class="filter-container">
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label class="form-label">Дата:</label>
+                        <input type="date" id="schedule-date" class="form-control" onchange="loadSchedule()">
+                    </div>
+                </div>
+            </div>
+            <div id="schedule-list"></div>
+        </section>
+
+        <!-- Teachers Section -->
+        <section id="teachers" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Преподаватели</h2>
+                <button class="btn btn-primary" onclick="showEntityModal('teacher')">
+                    ➕ Добавить преподавателя
+                </button>
+            </div>
+            <div id="teachers-list"></div>
+        </section>
+
+        <!-- Subjects Section -->
+        <section id="subjects" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Предметы</h2>
+                <button class="btn btn-primary" onclick="showEntityModal('subject')">
+                    ➕ Добавить предмет
+                </button>
+            </div>
+            <div id="subjects-list"></div>
+        </section>
+
+        <!-- Groups Section -->
+        <section id="groups" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Группы</h2>
+                <button class="btn btn-primary" onclick="showEntityModal('group')">
+                    ➕ Добавить группу
+                </button>
+            </div>
+            <div id="groups-list"></div>
+        </section>
+
+        <!-- Classrooms Section -->
+        <section id="classrooms" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Аудитории</h2>
+                <button class="btn btn-primary" onclick="showEntityModal('classroom')">
+                    ➕ Добавить аудиторию
+                </button>
+            </div>
+            <div id="classrooms-list"></div>
+        </section>
+
+        <!-- Class Types Section -->
+        <section id="class-types" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Типы занятий</h2>
+                <button class="btn btn-primary" onclick="showEntityModal('class_type')">
+                    ➕ Добавить тип
+                </button>
+            </div>
+            <div id="class-types-list"></div>
+        </section>
+
+        <!-- Templates Section -->
+        <section id="templates" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Шаблоны расписания</h2>
+                <button class="btn btn-primary" onclick="showTemplateModal()">
+                    📋 Создать шаблон
+                </button>
+            </div>
+            <div id="templates-list"></div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Экспорт отчётов</h2>
+            </div>
+            <div class="card">
+                <div class="form-group">
+                    <label class="form-label">Язык:</label>
+                    <select id="report-language" class="form-control">
+                        <option value="russian">Русский</option>
+                        <option value="kyrgyz">Кыргызча</option>
+                        <option value="english">English</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Тип отчёта:</label>
+                    <select id="report-type" class="form-control" onchange="onReportTypeChange()">
+                        <option value="general">Общий</option>
+                        <option value="group">По группе</option>
+                        <option value="teacher">По преподавателю</option>
+                    </select>
+                </div>
+
+                <div id="report-group-container" class="form-group hidden">
+                    <label class="form-label">Группа:</label>
+                    <select id="report-group-select" class="form-control"></select>
+                </div>
+
+                <div id="report-year-container" class="form-group hidden">
+                    <label class="form-label">Курс:</label>
+                    <select id="report-year-select" class="form-control"></select>
+                </div>
+
+                <div id="report-teacher-container" class="form-group hidden">
+                    <label class="form-label">Преподаватель:</label>
+                    <select id="report-teacher-select" class="form-control"></select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Дата от:</label>
+                    <input type="date" id="report-date-from" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Дата до:</label>
+                    <input type="date" id="report-date-to" class="form-control" required>
+                </div>
+                
+                <button class="btn btn-success" onclick="exportReport()">
+                    📄 Экспорт DOCX
+                </button>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Настройки системы</h2>
+            </div>
+            <div id="settings-form"></div>
+        </section>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
